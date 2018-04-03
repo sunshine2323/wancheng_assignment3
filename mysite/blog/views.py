@@ -8,6 +8,20 @@ from watson_developer_cloud import ToneAnalyzerV3
 from watson_developer_cloud import LanguageTranslatorV2 as LanguageTranslator
 
 
+class HyperPost:
+
+    def __init__(self, Post, post_text, wcount, ccount, translation):
+
+        self.post = Post
+
+        self.post_text = post_text
+
+        self.word_count = wcount
+
+        self.character_count = ccount
+
+        self.translation = translation
+
 def post_list(request):
     posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
     tone_analyzer = ToneAnalyzerV3(
@@ -22,7 +36,7 @@ def post_list(request):
 
     # print(json.dumps(translation, indent=2, ensure_ascii=False))
 
-    My_posts=[]
+    my_posts=[]
     for post in posts:
         posting = post.text
         toneObj = json.dumps(tone_analyzer.tone(tone_input=posting,
@@ -41,10 +55,11 @@ def post_list(request):
             target='es')
         obj= json.dumps(translation, indent=2, ensure_ascii=False)
         post.obj2 = json.loads(obj)
+        my_posts.append(HyperPost(post, posting, post.obj2['word_count'], post.obj2['character_count'],
 
+                                     post.obj2['translations'][0]['translation']))
 
-
-    return render(request, 'blog/post_list.html', {'posts': posts})
+    return render(request, 'blog/post_list.html', {'posts': my_posts})
 
 
 def post_detail(request, pk):
